@@ -2,6 +2,14 @@ import pygame as pg
 
 
 # from random import randint
+class MainCharacter(pg.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pg.image.load('Character.png')
+        self.rect = self.image.get_rect()
+        colorkey = self.image.get_at((0, 0))
+        self.image.set_colorkey(colorkey)
+
 
 def movement(key):
     if chr(key) in move_letters.keys():
@@ -17,13 +25,11 @@ if __name__ == '__main__':
     height = 1000
     screen = pg.display.set_mode((width, height))
 
-    char_image = pg.image.load('Character.png')
-    character = pg.sprite.Sprite()
-    character.image = char_image
-    character.rect = character.image.get_rect()
+    move_up, move_down, move_left, move_right = False, False, False, False
+    tp_l, tp_r, tp_u, tp_d = False, False, False, False
+    speed = 15
 
-    move_letters = {'w': [0, -5], 'a': [-5, 0], 's': [0, 5], 'd': [5, 0]}
-
+    main_char = MainCharacter()
     land = [[], [], []]
     la_x = 0
     la_y = 0
@@ -34,6 +40,8 @@ if __name__ == '__main__':
             field_image = pg.image.load('check_field.png')
             field.image = field_image
             field.rect = field.image.get_rect()
+            field.rect.x = 1000 * i - 1000
+            field.rect.y = 1000 * j - 1000
             a.append(field)
         land[i] = a
 
@@ -45,25 +53,48 @@ if __name__ == '__main__':
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
-            klav = pg.key.get_pressed()
-            x, y = movement(pg.K_w)
-            la_x -= x * klav[pg.K_w]
-            la_y -= y * klav[pg.K_w]
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_w:
+                    move_up = True
+                if event.key == pg.K_a:
+                    move_left = True
+                if event.key == pg.K_s:
+                    move_down = True
+                if event.key == pg.K_d:
+                    move_right = True
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_w:
+                    move_up = False
+                if event.key == pg.K_a:
+                    move_left = False
+                if event.key == pg.K_s:
+                    move_down = False
+                if event.key == pg.K_d:
+                    move_right = False
 
-            x, y = movement(pg.K_a)
-            la_x -= x * klav[pg.K_a]
-            la_y -= y * klav[pg.K_a]
+        for i in land:
+            for j in i:
+                j.rect.x -= speed * int(move_right) - speed * int(move_left)
+                j.rect.y -= speed * int(move_down) - speed * int(move_up)
 
-            x, y = movement(pg.K_s)
-            la_x -= x * klav[pg.K_s]
-            la_y -= y * klav[pg.K_s]
-
-            x, y = movement(pg.K_d)
-            la_x -= x * klav[pg.K_d]
-            la_y -= y * klav[pg.K_d]
         screen.fill('black')
-        screen.blit(land[1][1].image, (la_x, la_y))
-        screen.blit(character.image, (width // 2 - character.rect.width // 2, height // 2 - character.rect.height // 2))
+        if land[1][1].rect.x >= 1000:
+            tp_l = True
+        elif land[1][1].rect.x <= -1000:
+            tp_r = True
+        if land[1][1].rect.y >= 1000:
+            tp_u = True
+        elif land[1][1].rect.y <= -1000:
+            tp_d = True
+        for i in range(3):
+            for j in range(3):
+                land[i][j].rect.x += int(tp_r) * 1000 - int(tp_l) * 1000
+                land[i][j].rect.y += int(tp_d) * 1000 - int(tp_u) * 1000
+        tp_l, tp_r, tp_u, tp_d = False, False, False, False
+        for i in land:
+            for j in i:
+                screen.blit(j.image, (j.rect.x, j.rect.y))
+        screen.blit(main_char.image, (width // 2 - main_char.rect.width // 2, height // 2 - main_char.rect.height // 2))
 
         pg.display.flip()
         clock.tick(fps)
