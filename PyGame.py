@@ -106,9 +106,9 @@ if __name__ == '__main__':
             for j in i:
                 j.rect.x -= speed * int(move_right) - speed * int(move_left)
                 j.rect.y -= speed * int(move_down) - speed * int(move_up)
-                for k in enemies:
-                    k.rect.x -= speed * int(move_right) - speed * int(move_left)
-                    k.rect.y -= speed * int(move_down) - speed * int(move_up)
+        for k in enemies:
+            k.rect.x -= speed * int(move_right) - speed * int(move_left)
+            k.rect.y -= speed * int(move_down) - speed * int(move_up)
 
         screen.fill('black')
         if land[1][1].rect.x >= 1000:
