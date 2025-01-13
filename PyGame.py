@@ -101,7 +101,9 @@ if __name__ == '__main__':
                     move_down = False
                 if event.key == pg.K_d:
                     move_right = False
-
+        count += 1
+        if count % 50 == 0:
+            enemies.add(Enemy())
         for i in land:
             for j in i:
                 j.rect.x -= speed * int(move_right) - speed * int(move_left)
