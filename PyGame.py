@@ -1,7 +1,9 @@
 from random import randint
 
 import pygame as pg
-
+import tkinter as tk
+import threading
+import time
 
 class MainCharacter(pg.sprite.Sprite):
     def __init__(self):
@@ -43,6 +45,86 @@ class Enemy(pg.sprite.Sprite):
         distance = ((500 - self.rect.x) ** 2 + (500 - self.rect.y) ** 2) ** 0.5
         self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))), int((500 - self.rect.y) / (distance / (speed - 2)))]
 
+class Stopwatch:
+    def __init__(self, screen):
+        self.screen = screen
+        self.image = pg.image.load('table.png')
+        self.image=pg.transform.rotate(self.image,90)
+        self.image=pg.transform.scale(self.image,(400,300))
+        self.font = pg.font.Font("Comic Sans MS.ttf", 36)  # Шрифт для отображения времени
+        self.running = True  # Флаг для управления работой секундомера
+        self.start_time = time.time()  # Время запуска секундомера
+
+    def update(self):
+        if self.running:
+            elapsed_time = time.time() - self.start_time
+            minutes, seconds = divmod(int(elapsed_time), 60)
+
+            timer_display = f"{minutes:02}:{seconds:02}"
+
+            # Отображение времени в правом верхнем углу
+            text_surface = self.font.render(timer_display, True, (255, 255, 255))
+            text_rect = text_surface.get_rect(topright=(self.screen.get_width() - 60, 100))
+            self.screen.blit(text_surface, text_rect)
+
+    def stop(self):
+        self.running = False  # Остановка секундомера
+    def time(self):
+        elapsed_time = time.time() - self.start_time
+        minutes, seconds = divmod(int(elapsed_time), 60)
+        return minutes,seconds
+class Level:
+    def __init__(self, screen):
+        self.screen = screen
+        self.font = pg.font.Font("Comic Sans MS.ttf", 36)  # Шрифт для текста
+        self.level = 1
+        self.max_level = 25
+        self.start_time = time.time()  # Запоминаем время начала
+        self.level_up_interval = 30  # Интервал повышения уровня в секундах
+
+    def update(self):
+        # Проверяем, прошло ли 30 секунд с последнего повышения уровня
+        current_time = time.time()
+        if current_time - self.start_time >= self.level_up_interval:
+            if self.level < self.max_level:
+                self.level += 1
+            self.start_time = current_time  # Обновляем время
+
+    def get_color(self):
+        # Плавное изменение цвета от зеленого к красному
+        ratio = (self.level - 1) / (self.max_level - 1)
+        blue = int(255 * (1 - ratio))  # Зеленый уменьшается
+        red = int(255 * ratio)  # Красный увеличивается
+        return (red, 0, blue)
+
+    def color(self):
+        color = self.get_color()
+        text_surface = self.font.render(f'Level: {self.level}', True, color)
+        text_rect = text_surface.get_rect(topright=(self.screen.get_width() - 220, 100))
+        self.screen.blit(text_surface, text_rect)
+
+class Hearts:
+    def __init__(self, screen):
+        self.screen = screen
+        self.max_hearts = 5
+        self.current_hearts = 5
+        self.heart_image = pg.image.load("heart.png")  # Загрузка изображения сердечка
+        self.heart_image = pg.transform.scale(self.heart_image, (50, 50))  # Изменение размера изображения
+        self.heart_spacing = 5  # Промежуток между сердечками
+
+    def plus(self):
+        if self.current_hearts < self.max_hearts:
+            self.current_hearts += 1
+
+    def minus(self):
+        if self.current_hearts > 0:
+            self.current_hearts -= 1
+
+    def draw(self):
+        for i in range(self.current_hearts):
+            x = self.screen.get_width() - (i + 1) * (self.heart_image.get_width() + self.heart_spacing)-60
+            y = 160  # Расположение по вертикали
+            self.screen.blit(self.heart_image, (x, y))
 
 if __name__ == '__main__':
     pg.init()
@@ -76,9 +158,13 @@ if __name__ == '__main__':
     clock = pg.time.Clock()
     running = True
 
+#секундомер
+    stopwatch=Stopwatch(screen)
+    level=Level(screen)
     enemies = pg.sprite.Group()
     enemy = Enemy()
     enemies.add(enemy)
+    hearts = Hearts(screen)
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -132,6 +218,13 @@ if __name__ == '__main__':
         screen.blit(main_char.image, (width // 2 - main_char.rect.width // 2, height // 2 - main_char.rect.height // 2))
         enemies.update()
         enemies.draw(screen)
+        screen.blit(stopwatch.image, (width//5*4-200, 0))
+        stopwatch.update()
+        level.update()
+        level.color()
+        hearts.draw()
+
         pg.display.flip()
         clock.tick(fps)
+
     pg.quit()
