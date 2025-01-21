@@ -204,7 +204,7 @@ if __name__ == '__main__':
             k.rect.x -= speed * int(move_right) - speed * int(move_left)
             k.rect.y -= speed * int(move_down) - speed * int(move_up)
 
-        screen.fill('black')#121
+        screen.fill('black')#12
         if land[1][1].rect.x >= 1000:
             tp_l = True
         elif land[1][1].rect.x <= -1000:
